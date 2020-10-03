@@ -6,8 +6,12 @@ class CPU:
     """Main CPU class."""
 
     def __init__(self):
+        #STEP 1: Add constructor to cpy.py
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 256
+        self.pc = 0
+        self.register = [0] * 8
+        self.running = True
 
     def load(self):
         """Load a program into memory."""
@@ -29,7 +33,6 @@ class CPU:
         for instruction in program:
             self.ram[address] = instruction
             address += 1
-
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -60,6 +63,52 @@ class CPU:
 
         print()
 
+    #STEP 2: add ram_read & ram_write
+    def ram_read(self, address):
+        return self.ram[address]
+
+    def ram_write(self, value, address):
+        self.ram[address] = value
+
+
+    #STEP 3: Implement 'run' method
     def run(self):
         """Run the CPU."""
-        pass
+
+        prog = {
+            'LDI': 0b10000010,
+            'PRN': 0b01000111,
+            'HLT': 0b00000001,
+            'ADD': 0b10100000,
+            'MUL': 0b10100010
+        }
+
+        while self.running:
+            #IR = _Instruction Register_
+            IR = self.ram_read(self.pc)
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
+
+            #STEP 4: Implement 'HLT' instruction handler
+            ### Halt the CPU (and exit the emulator)
+            if IR == prog['HLT']:
+                self.running = False
+
+            #STEP 5: Implement 'LDI' instruction
+            ### Set the value of a register to an integer
+            elif IR == prog['LDI']:
+                address = operand_a
+                value = operand_b
+                self.register[address] = value
+                self.pc += 3
+
+            #STEP 6: Add 'PRN' instruction
+            ### Print to the console the decimal integer value that is stored in the given register.
+            elif IR == prog['PRN']:
+                address = operand_a
+                value = self.register[address]
+                print(value)
+                self.pc += 2
+
+            else: 
+                print ('unknown command')
