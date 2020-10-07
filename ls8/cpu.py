@@ -2,44 +2,63 @@
 
 import sys
 
+
+
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
-        #STEP 1: Add constructor to cpy.py
+        #STEP 1: Add constructor to cpu.py
         """Construct a new CPU."""
         self.ram = [0] * 256
         self.pc = 0
         self.register = [0] * 8
         self.running = True
+        self.reg = [0] * 8
 
-    def load(self):
+    def load(self, filename):
         """Load a program into memory."""
-
+        # STEP 7 Un-hardcode the machine code
+        filename = sys.argv[1]
         address = 0
+        with open(filename) as f:
+            for address, line in enumerate(f):
+                line = line.split('#')
+
+                try:
+                    v = int(line[0], 2)
+                except ValueError:
+                    continue
+                self.ram[address] = v
+                address += 1
 
         # For now, we've just hardcoded a program:
 
-        program = [
+        #program = [
             # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+        #   0b10000010, # LDI R0,8
+        #   0b00000000,
+        #   0b00001000,
+        #   0b01000111, # PRN R0
+        #   0b00000000,
+        #   0b00000001, # HLT
+        #]
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        #for instruction in program:
+        #    self.ram[address] = instruction
+        #    address += 1
 
     def alu(self, op, reg_a, reg_b):
+
         """ALU operations."""
 
         if op == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
+            self.register[reg_a] += self.register[reg_b]
+
         #elif op == "SUB": etc
+
+        elif op == "MUL":
+            self.register[reg_a] *= self.register[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -85,7 +104,7 @@ class CPU:
 
         while self.running:
             #IR = _Instruction Register_
-            IR = self.ram_read(self.pc)
+            IR = self.ram[self.pc]
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
 
@@ -110,5 +129,10 @@ class CPU:
                 print(value)
                 self.pc += 2
 
-            else: 
-                print ('unknown command')
+            #STEP 8: Implement a Multiply and print result
+            elif IR == prog['MUL']:
+                self.alu('MUL', operand_a, operand_b)
+                self.pc += 3
+            else:
+                print(f"Can't find {IR} with index of {self.pc}")
+                sys.exit(1)
