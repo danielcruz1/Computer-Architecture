@@ -15,6 +15,7 @@ class CPU:
         self.register = [0] * 8
         self.running = True
         self.reg = [0] * 8
+        self.SP = 0xf4
 
     def load(self, filename):
         """Load a program into memory."""
@@ -31,22 +32,6 @@ class CPU:
                     continue
                 self.ram[address] = v
                 address += 1
-
-        # For now, we've just hardcoded a program:
-
-        #program = [
-            # From print8.ls8
-        #   0b10000010, # LDI R0,8
-        #   0b00000000,
-        #   0b00001000,
-        #   0b01000111, # PRN R0
-        #   0b00000000,
-        #   0b00000001, # HLT
-        #]
-
-        #for instruction in program:
-        #    self.ram[address] = instruction
-        #    address += 1
 
     def alu(self, op, reg_a, reg_b):
 
@@ -93,13 +78,14 @@ class CPU:
     #STEP 3: Implement 'run' method
     def run(self):
         """Run the CPU."""
-
         prog = {
             'LDI': 0b10000010,
             'PRN': 0b01000111,
             'HLT': 0b00000001,
             'ADD': 0b10100000,
-            'MUL': 0b10100010
+            'MUL': 0b10100010,
+            'PUSH': 0b01000101,
+            'POP': 0b01000110
         }
 
         while self.running:
@@ -133,6 +119,24 @@ class CPU:
             elif IR == prog['MUL']:
                 self.alu('MUL', operand_a, operand_b)
                 self.pc += 3
+
+            #STEP 10: System Stack (PUSH & POP)
+            elif IR == prog['PUSH']:
+
+                address = operand_a
+                value = self.register[address]
+                self.SP -= 1
+                self.ram[self.SP] = value
+                self.pc += 2
+
+            elif IR == prog['POP']:
+                address = operand_a
+                value = self.ram[self.SP]
+                self.register[address] = value
+
+                self.SP += 1
+                self.pc += 2
+
             else:
                 print(f"Can't find {IR} with index of {self.pc}")
                 sys.exit(1)
